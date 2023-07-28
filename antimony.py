@@ -3,6 +3,7 @@ from os import path
 
 import requests
 
+# 元字符
 metachars = {
 'Cl': '盐',
 'Fe': '铁',
@@ -15,7 +16,7 @@ metachars = {
 '⌬': '苯'
 }
 
-DIR_PATH = 'C:/锑星文图象/'  # 自行修改
+DIR_PATH = 'C:/锑星文图象/'  # 储存锑星文字图片的文件夹，请自行修改
 
 def stru(text: str, s=0, adding: str=''):
     """
@@ -26,25 +27,25 @@ def stru(text: str, s=0, adding: str=''):
     adding: 附加偏旁
     """
     if isinstance(s, int):
-        trans = \
-        ['0 1 2 3  4 5 6 7 8 9 10 11',
-         '⿰⿱⿲ ⿳ ⿴⿵ ⿶⿷⿸ ⿹ ⿺ ⿻'.replace(' ', '')]
+        trans = '⿰⿱⿲⿳⿴⿵⿶⿷⿸⿹⿺⿻'
         if adding:
-           return stru(trans[1][s] + text, adding)
+           return stru(trans[s] + text, adding)
         else:
-            return trans[1][s] + text
+            return trans[s] + text
     elif isinstance(s, str) and adding == '':
         if s == '气':  # 添加气字头
             return stru(s + text, 9)
-        else:  # 添加偏旁
+        else:  # 添加左右结构的偏旁
             return stru(s + text, 0)
     else:
-        raise ValueError(f'{text}')
+        raise ValueError(text)
 
+# 在锑星文字中
 # “石”为顺时针旋转90度，“酉”为逆时针旋转90度
 # “气”为旋转180度，“氵”为水平翻转，“火”为竖直翻转
 # “手”为字符翻转后与原字符结合
 
+# 映射表
 trans = {
 '0': stru('土土', 0),
 '1': '血',
@@ -58,6 +59,7 @@ trans = {
 '9': stru(stru('土㠯'), '气')
 }
 
+# 英文字母直接按照顺序写了，一个一个手写映射太麻烦，下面会用一个循环直接生成映射表
 map = (stru('目丸', 0 , '扌'), stru('皿官'), '圤', 
        stru(stru('卜土', 1), '皿'), '钼',
        '金', stru('圤目'), '基', '立', stru('皿廾', 1),
@@ -67,7 +69,7 @@ map = (stru('目丸', 0 , '扌'), stru('皿官'), '圤',
        stru('圤' + stru('卜土'), 1), stru('目皿', 1),
        stru(stru('皿十', 1) + stru('皿十', 1)), stru('丸扌'), stru('丸亻'),
        stru(stru('丸扌') + '执', 1), stru(stru('丸扌') + '皿', 1), stru('石人'),
-       
+       # 下面是小写字母
        '良', '弟', stru('氵㠯'), '涕', '失', stru('艹' + stru('目皿', 1), 1),
        stru('火良'), stru('皿日', 1), stru('口皿', 1), stru(stru('口皿', 1) + '廾', 1),
        stru('皿' + stru('扌丸', 1), 1), '皿', '田', '日', stru('手㠯'), '焍',
@@ -83,6 +85,10 @@ for i in range(len(map)):
 
 class CharImg:
     def __init__(self, code: str, ext='svg', small=False, use_api=True):
+        """code: 文字的结构编码，比如 "⿰钅圆"
+        ext: 文件扩展名，只能是 svg 或者 png
+        small: 该字符是否为下标
+        use_api: 是否用网络提供图片，如果为 False ，则第一次会自动从网络下载图片到本地，并使用本地图片，不再依赖网络"""
         self.code = code
         self.ext = ext.lower().lstrip('.')
         assert self.ext in ['svg', 'png']
@@ -97,7 +103,6 @@ class CharImg:
                 self.html = '<small><small>' + self.code + '</small></small> '
             else:
                 self.html = self.code + ' '
-        # 我的 html 烂的一批...
         else:
             if self.use_api:  # 使用网络 api 插入图片
                 src = self.url
@@ -117,12 +122,12 @@ class CharImg:
             
         
     def to_file(self, path: str):
+        """下载该字符的图片"""
         with requests.get(self.url) as req:
             response = req.content
         with open(path, 'wb') as f:
             f.write(response)
-    
-    
+
 
 
 
@@ -135,7 +140,7 @@ class Antimony:
         if self.char is None:
             raise ValueError(f'cannot translate {self.raw}')
         self.inunicode =  self.char[0] not in '⿰⿱⿲⿳⿴⿵⿶⿷⿸⿹⿺⿻'
-        if self.char in 'vwxyz':
+        if self.char in 'vwxyz':  # 这些字符需要下标
             self.img = CharImg(self.char, small=True, use_api=use_api)
         else:
             self.img = CharImg(self.char, use_api=use_api)
@@ -144,6 +149,7 @@ class Antimony:
         return f'<AntimonyChar, raw={self.raw}>'
     
     def find_char(self):
+        """在映射表里找到该字符"""
         res = metachars.get(self.raw, None)
         if res is not None:
             return res
