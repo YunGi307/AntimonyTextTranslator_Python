@@ -118,7 +118,6 @@ class CharImg:
                 self.html = f'<img src="{src}" alt="{src}" ' + \
                              'style="vertical-align:middle;position:relative;top:-2px;" ' + \
                              'height="18px"/>\n'
-
             
         
     def to_file(self, path: str):
