@@ -4,7 +4,7 @@ from os import path
 import requests
 
 from charimg import CharImg
-from database import metachars, trans. SPEC
+from database import metachars, trans, SPEC
 
 DIR_PATH = 'C:/锑星文图象/'  # 储存锑星文字图片的文件夹，请自行修改
 
